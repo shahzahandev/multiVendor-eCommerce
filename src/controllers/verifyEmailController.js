@@ -24,7 +24,16 @@ exports.verifyEmailController = async(req, res ) => {
         user.isEmailVerified = true
         await user.save()
 
-    } catch (error) {
+        await VerificationToken.deleteOne({_id: verificationToken.id})
         
+        // Frontend redirect URL
+        res.redirect(`${process.env.FRONTEND_URL}/verify-success?email=${email}`)
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error.",
+            error: error
+        })
     }
 }

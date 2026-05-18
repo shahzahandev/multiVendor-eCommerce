@@ -38,11 +38,14 @@ let userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    reFreshToken: [{
+    reFreshTokens: [{
         type: String,
         createdAt: {
             type: Date,
             default: Date.now
+        },
+        expiresAt:{
+            type: Date
         }
     }],
     createdAt: {
