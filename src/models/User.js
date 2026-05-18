@@ -26,7 +26,7 @@ let userSchema = new Schema({
         type: String,
         required: [true, 'Password is required'],
         minLength: 8,
-        select: true,
+        select: false,
         // match: [/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, 'Please enter a stronger password'],
     },
     role: {
