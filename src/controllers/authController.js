@@ -29,8 +29,8 @@ exports.registerController = async (req, res) => {
         // Create user
         let user = new User({
             name: name,
-            email: eamil,
-            passwrod: password,
+            email: email,
+            password: password,
             phone: phone || undefined,
             role: role || 'customer'
         })
@@ -58,7 +58,7 @@ exports.registerController = async (req, res) => {
             subject: 'Verify your email - Multivendor Ecommerce.',
             html: `
                    <h2> Wellcome to our platform </h2>
-                   <p> Hi ${user.naem} </p>
+                   <p> Hi ${user.name} </p>
                    <p> Thanks for registration, Please verify your email by clicking the link below. </p>
                    <a herf=${verificationUrl}> Veirify email. </a>
                    <p> This link will be expire in 24 housrs </p>
@@ -86,11 +86,11 @@ exports.registerController = async (req, res) => {
         })
         // Server error message
     } catch (error) {
-        console.log('Login Error: error');
+        console.log('Registration Error: error');
         return res.status(500).json({
             success: false,
             message: 'Server error during Registration.',
-            error: error
+            error: error.message
         })
     }
 }

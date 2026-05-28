@@ -25,7 +25,7 @@ let userSchema = new Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minLength: 8,
+        minLength: 5,
         select: false,
         // match: [/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, 'Please enter a stronger password'],
     },
@@ -44,7 +44,7 @@ let userSchema = new Schema({
             type: Date,
             default: Date.now
         },
-        expiresAt:{
+        expiresAt: {
             type: Date
         }
     }],
@@ -52,16 +52,15 @@ let userSchema = new Schema({
         type: Date,
         default: Date.now
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 
 // password hash
-userSchema.pre('save', async function(next) {
-   if(!this.isModified('password'))  return next()
+userSchema.pre('save', async function (next) {
 
-    let salt = await bcrypt.genSalt(12)
-    this.password = await bcrypt.hash(this.password, salt) 
-    next()
+   if (!this.isModified('password')) return
+        let salt = await bcrypt.genSalt(12)
+        this.password = await bcrypt.hash(this.password, salt)
 })
 
 // password compare
