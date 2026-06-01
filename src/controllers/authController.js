@@ -238,7 +238,7 @@ exports.refreshTokenController = async (req, res) => {
     }
 }
 
-exports.logout = async (req, res) => {
+exports.logoutController = async (req, res) => {
     try {
         const refreshToken = req.cookies.reFreshToken
         if (!refreshToken) {
@@ -273,7 +273,7 @@ exports.logout = async (req, res) => {
     }
 }
 
-exports.logoutAll = async (req, res) => {
+exports.logoutAllController = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
         if (!user) {
@@ -297,6 +297,70 @@ exports.logoutAll = async (req, res) => {
             })
         }
     } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error During logout'
+        })
+    }
+}
+
+exports.registerVendorController = async (req, res) => {
+    try {
+        const validateData = req.body
+        const { name, email, password, phone, shopName, shopDescription, shopAddress, nidNumber, bankInfo } = validateData
+
+        // Check duplicate
+        const existingUser = User.findOne({ email })
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'Email already registered, You are a vendor aready, please as vendor'
+            })
+        }
+
+        // Check duplicate NID
+        if (nidNumber) {
+            const existingUser = User.findOne({ nidNumber })
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'NID already registered, You are a vendor aready, please as vendor'
+                })
+            }
+        }
+
+        // 
+        const user = new User({
+            name: name,
+            email: email,
+            password: password,
+            phone: phone,
+            role: 'vendor',
+            shopName: shopName,
+            shopDescription: shopDescription,
+            shopAddress: shopAddress,
+            nidNumber: nidNumber,
+            bankInfo: bankInfo,
+            status: 'pending'  // auto set by pre save
+        })
+
+        await user.save()
+
+        return res.status(200).json({
+            success: true,
+            message: 'Vendor Registered Successfully',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status
+            }
+        })
+
+
+    } catch (error) {
+        console.log(error);
         return res.status(500).json({
             success: false,
             message: 'Server Error During logout'

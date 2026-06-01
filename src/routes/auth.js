@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const { registerController, loginController, refreshTokenController } = require('../controllers/authController')
+const { registerController, loginController, refreshTokenController, registerVendorController, logoutController, logoutAllController } = require('../controllers/authController')
 const { verifyEmailController } = require('../controllers/verifyEmailController')
 const validate = require('../middleware/validate')
-const { registrationSchema, loginSchema } = require('../validation/auth.validation')
+const { registrationSchema, loginSchema, vendorValidationSchema } = require('../validation/auth.validation')
 const { registerLimiter, loginLimiter, refreshLimiter } = require('../middleware/rateLimiter')
 
 /**
@@ -49,7 +49,9 @@ router.post('/register', registerLimiter, validate(registrationSchema), register
 router.post('/register', loginLimiter, validate(loginSchema), registerController)
 router.get('/verify-email', verifyEmailController)
 router.post('/login', loginController)
+router.post('/logout', logoutController)
+router.post('/logout-all', logoutAllController)
 router.post('/refreshToken', refreshLimiter, refreshTokenController)
-
+router.post('/register-vendor', registerLimiter, validate(vendorValidationSchema), registerVendorController )
 
 module.exports = router
