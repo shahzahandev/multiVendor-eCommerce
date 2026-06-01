@@ -2,7 +2,8 @@ const express = require('express')
 const router = express.Router()
 const { registerController, loginController, refreshTokenController } = require('../controllers/authController')
 const { verifyEmailController } = require('../controllers/verifyEmailController')
-
+const validate = require('../middleware/validate')
+const { registrationSchema, loginSchema } = require('../validation/auth.validation')
 
 /**
  * @swagger
@@ -43,8 +44,8 @@ const { verifyEmailController } = require('../controllers/verifyEmailController'
  *         description: Internal server error
  */
 
-router.post('/register', registerController)
-router.post('/register', registerController)
+router.post('/register', validate(registrationSchema), registerController)
+router.post('/register', validate(loginSchema), registerController)
 router.get('/verify-email', verifyEmailController)
 router.post('/login', loginController)
 router.post('/refreshToken', refreshTokenController)
