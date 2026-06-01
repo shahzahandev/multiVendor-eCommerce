@@ -7,7 +7,7 @@ const nodemailer = require('nodemailer')
 const { v4: uuidv4 } = require('uuid')
 const verificationToken = require("../models/verificationToken")
 
-exports.registerController = async (req, res) => {  
+exports.registerController = async (req, res) => {
     try {
         let { name, email, password, phone, role } = req.body
 
@@ -234,6 +234,72 @@ exports.refreshTokenController = async (req, res) => {
             success: false,
             message: 'Server error',
             error: error
+        })
+    }
+}
+
+exports.logout = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.reFreshToken
+        if (!refreshToken) {
+            return res.status(204).send()
+        }
+
+        // Find User
+        const user = await User.findOne({
+            refreshToken: { $elemMatch: { token: refreshToken } }
+        })
+
+        if (user) {
+            user.refreshTokens = user.refreshToken.filter(rt => rt.token != refreshToken)
+            await user.save()
+        }
+
+        return res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV = 'production',
+            sameSite: 'strict'
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error During logout'
+        })
+    }
+}
+
+exports.logoutAll = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            })
+
+            user.refreshTokens = []
+            await user.save()
+
+            return res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV = 'production',
+                sameSite: 'strict'
+            })
+
+            return res.status(200).json({
+                success: true,
+                message: 'Logged out from all devices'
+            })
+        }
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error During logout'
         })
     }
 }
