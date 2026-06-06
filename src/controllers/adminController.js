@@ -180,3 +180,67 @@ exports.getAllUsers = async (req, res) => {
         });
     }
 }
+
+exports.getAdminStats = async(req, res) => {
+    try {
+        const [
+            tolalUsers,
+            totalCustomer,
+            vendorStats,
+            pendingVendors,
+            rejectedVendors,
+            approveVendor
+        ] = await Promise.all([
+            // tolal user
+            User.countDocuments({}),
+
+            // total customer
+            User.countDocuments({role: 'customer'}),
+   
+            // Vendor breakdown using aggegation pipelin
+            user.aggregate([
+                {$match: {role: 'vendor'}},
+                {
+                    $group: {
+                        _id: null,
+                        totalVendors: {$sum: 1},
+                        approved: {
+                           $sum: {
+                            $cond: [{$eq: ['$status', 'approved']}, 1, 0]
+                           } 
+                        },
+                          pending: {
+                           $sum: {
+                            $cond: [{$eq: ['$status', 'pending']}, 1, 0]
+                           } 
+                        },
+                          rejected: {
+                           $sum: {
+                            $cond: [{$eq: ['$status', 'rejected']}, 1, 0]
+                           } 
+                        },
+                          suspended: {
+                           $sum: {
+                            $cond: [{$eq: ['$status', 'suspended']}, 1, 0]
+                           } 
+                        }
+                    }
+                }
+            ]),
+        ])
+       
+        const vendorBreadown = vendorStats[0] || {
+            totalVendors: 0,
+            approved: 0,
+            pending: 0,
+            rejected: 0,
+            suspended: 0
+        }
+
+    } catch (error) {
+         return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+}
