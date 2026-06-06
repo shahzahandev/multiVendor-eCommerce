@@ -4,7 +4,10 @@ const express = require('express')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const mongoose = require('mongoose')
+
 const authRouter = require('./routes/auth')
+const adminRouter = require('./routes/admin')
+
 const swaggerSpecs = require('./config/swagger')
 const swaggerUi = require('swagger-ui-express');
 const { apiLimiter } = require('./middleware/rateLimiter');
@@ -22,6 +25,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs))
 // Routes
 app.use('/api/v1', apiLimiter)
 app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/admin', adminRouter)
+
 
 // MongoDB conection
 mongoose.connect(process.env.MONGODB_URL)

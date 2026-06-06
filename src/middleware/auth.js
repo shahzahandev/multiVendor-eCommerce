@@ -2,13 +2,13 @@ const jwt = require('jsonwebtoken')
 
 
 const protect = async (req, res, next) => {
-    let token ;
+    let token;
 
-    if(req.headers.authorization && req.headers.authorization.startWith('Bearer')){
-        token = req.headers.authorization.split('')[1]
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1]
     }
 
-    if(!token){
+    if (!token) {
         return res.status(401).json({
             success: false,
             message: 'Not authorized, no token'
@@ -19,8 +19,9 @@ const protect = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN)
         req.user = decoded
         next()
+
     } catch (error) {
-         return res.status(401).json({
+        return res.status(401).json({
             success: false,
             message: 'Not authorized, no failed'
         })
@@ -28,16 +29,16 @@ const protect = async (req, res, next) => {
 }
 
 
-const restrictTo = async (...roles) => {
-   return (req, res, next) => {
-    if(!roles.includes(req.user.role)){
-        return res.status(403).json({
-            success: false,
-            message: 'You do not have permission'
-        })
-        next()
+const restrictTo = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission'
+            });
+        }
+        next();
     }
-   }
 }
 
-module.exports = {protect, restrictTo}
+module.exports = { protect, restrictTo }
