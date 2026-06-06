@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer')
 const { v4: uuidv4 } = require('uuid')
 const verificationToken = require("../models/verificationToken")
 
+
 exports.registerController = async (req, res) => {
     try {
         let { name, email, password, phone, role } = req.body

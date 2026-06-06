@@ -16,7 +16,6 @@ router.patch('/vendor/:id/approve', approveVendor);
 router.patch('/vendor/:id/reject', rejectVendor);
 
 
-
 router.get('/stats', getAdminStats)
 
 

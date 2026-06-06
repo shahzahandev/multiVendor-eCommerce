@@ -183,14 +183,8 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getAdminStats = async(req, res) => {
     try {
-        const [
-            tolalUsers,
-            totalCustomer,
-            vendorStats,
-            pendingVendors,
-            rejectedVendors,
-            approveVendor
-        ] = await Promise.all([
+        const [ tolalUsers, totalCustomer, vendorStats, pendingVendors,
+            rejectedVendors, approveVendor, suspendedVendors ] = await Promise.all([
             // tolal user
             User.countDocuments({}),
 
@@ -227,15 +221,52 @@ exports.getAdminStats = async(req, res) => {
                     }
                 }
             ]),
+
+            // Pending Vendor
+            User.countDocuments({role: 'vendor', status: 'pending'}),
+
+            // Rejected Vendor
+            User.countDocuments({role: 'vendor', status: 'rejected'}),
+
+            // Approved Vendor
+            User.countDocuments({role: 'vendor', status: 'approved'}),
+
+            // Suspended Vendor
+            User.countDocuments({role: 'vendor', status: 'suspended'}),
         ])
        
-        const vendorBreadown = vendorStats[0] || {
+        const vendorBreakdown = vendorStats[0] || {
             totalVendors: 0,
             approved: 0,
             pending: 0,
             rejected: 0,
             suspended: 0
         }
+
+        const stats = {
+            overview: {
+               totalUser,
+               totalCustomer,
+               totalVendors: vendorBreadown.totalVendors,
+            },
+            vendors:{
+               approved: vendorBreakdown.approved || approveVendor,
+               pending: vendorBreakdown.pending || pendingVendors,
+               rejected: vendorBreakdown.rejected || rejectedVendors,
+               suspended: vendorBreakdown.suspended || suspendedVendors
+            },
+            newRegistrationToday: await User.countDocuments({
+                createdAt: {
+                    $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                }
+            }),
+            timestamp: new Date().toISOString()   
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: stats
+        })
 
     } catch (error) {
          return res.status(500).json({
