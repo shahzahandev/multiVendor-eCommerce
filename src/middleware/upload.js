@@ -1,5 +1,10 @@
-const productStorage = new CloudanaryStorage({
-    cloudanary,
+const multer = require('multer');
+const CloudinaryStorage = require('multer-storage-cloudinary')
+const cloudinary = require('../config/cloudinary')
+
+// Product upload
+const productStorage = new CloudinaryStorage({
+    cloudinary,
     params: (res, file) => ({
         folder: 'products',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
@@ -11,9 +16,9 @@ const productStorage = new CloudanaryStorage({
             quality: 'auto'
         }]
     })
-})
+});
 
-
+// Multiple product uploaded
 const uploadProductImages = multer({
     storage: productStorage,
     limits: {
@@ -21,3 +26,66 @@ const uploadProductImages = multer({
     },
     fileFilter
 }).array('image', 8)
+
+// Vendor logo uplaod
+const logoStorage = new CloudinaryStorage({
+    cloudinary,
+    params: (res, file) => ({
+        folder: 'vendors/logo',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        public_id: `logo-${req.body.email || 'unknown'}-${Date.now()}`,
+        transformation: [{
+            width: 500,
+            height: 500,
+            crop: 'limit',
+            quality: 'auto'
+        }]
+    })
+})
+
+// NID Document uplaod
+const nidStorage = new CloudinaryStorage({
+    cloudinary,
+    params: (res, file) => ({
+        folder: 'vendors/nids',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
+        public_id: `nid-${req.body.nidName || 'unknown'}-${Date.now()}`,
+        transformation: [{
+            quality: 'auto'
+        }]
+    })
+})
+
+// file filter for extra security
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = allowedTypes.test(file.orginalname.toLowerCase());l
+    const minetype = allowedTypes.test(file.minetype);
+
+    if(extname && minetype){
+        return cb(null, true)
+    }    
+    cb(new Error('Only images (jpe, jpeg, png, webp) and PDF allowed'))
+}
+
+// Logo uploader for single file
+const uplaodLogo = multer({
+    storage: logoStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5mb
+    },
+    fileFilter
+}).single('shopLogo')
+
+
+// NID uploader for single file
+const uplaodNid = multer({
+    storage: nidStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5mb
+    },
+    fileFilter
+}).single('nidScan')
+
+
+module.exports = {uplaodLogo, uplaodNid, uploadProductImages}
