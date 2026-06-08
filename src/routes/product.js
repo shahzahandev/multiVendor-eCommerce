@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { protect, restrictTo} = require('../middleware/auth');
-const { createProduct, getMyProduct } = require('../controllers/productController');
+const { createProduct, getMyProduct, getAllProducts, getProductById } = require('../controllers/productController');
 
 router.use(protect);
+
+// Public
+router.get('/', getAllProducts)
+router.get('/:id', getProductById)
+
 
 // Vendor Routes
 router.post('/create', restrictTo('vendor'), createProduct);
