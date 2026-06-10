@@ -165,7 +165,7 @@ exports.rejectVendor = async (req, res) => {
 // All Users
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({}).select('name email role status createAt').sort({createdAt : -1})
+        const users = await User.find({}).select('name email role status createAt').sort({ createdAt: -1 })
 
         return res.status(200).json({
             success: false,
@@ -181,60 +181,60 @@ exports.getAllUsers = async (req, res) => {
     }
 }
 
-exports.getAdminStats = async(req, res) => {
+exports.getAdminStats = async (req, res) => {
     try {
-        const [ tolalUsers, totalCustomer, vendorStats, pendingVendors,
-            rejectedVendors, approveVendor, suspendedVendors ] = await Promise.all([
-            // tolal user
-            User.countDocuments({}),
+        const [tolalUsers, totalCustomer, vendorStats, pendingVendors,
+            rejectedVendors, approveVendor, suspendedVendors] = await Promise.all([
+                // tolal user
+                User.countDocuments({}),
 
-            // total customer
-            User.countDocuments({role: 'customer'}),
-   
-            // Vendor breakdown using aggegation pipelin
-            user.aggregate([
-                {$match: {role: 'vendor'}},
-                {
-                    $group: {
-                        _id: null,
-                        totalVendors: {$sum: 1},
-                        approved: {
-                           $sum: {
-                            $cond: [{$eq: ['$status', 'approved']}, 1, 0]
-                           } 
-                        },
-                          pending: {
-                           $sum: {
-                            $cond: [{$eq: ['$status', 'pending']}, 1, 0]
-                           } 
-                        },
-                          rejected: {
-                           $sum: {
-                            $cond: [{$eq: ['$status', 'rejected']}, 1, 0]
-                           } 
-                        },
-                          suspended: {
-                           $sum: {
-                            $cond: [{$eq: ['$status', 'suspended']}, 1, 0]
-                           } 
+                // total customer
+                User.countDocuments({ role: 'customer' }),
+
+                // Vendor breakdown using aggegation pipelin
+                user.aggregate([
+                    { $match: { role: 'vendor' } },
+                    {
+                        $group: {
+                            _id: null,
+                            totalVendors: { $sum: 1 },
+                            approved: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'approved'] }, 1, 0]
+                                }
+                            },
+                            pending: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'pending'] }, 1, 0]
+                                }
+                            },
+                            rejected: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0]
+                                }
+                            },
+                            suspended: {
+                                $sum: {
+                                    $cond: [{ $eq: ['$status', 'suspended'] }, 1, 0]
+                                }
+                            }
                         }
                     }
-                }
-            ]),
+                ]),
 
-            // Pending Vendor
-            User.countDocuments({role: 'vendor', status: 'pending'}),
+                // Pending Vendor
+                User.countDocuments({ role: 'vendor', status: 'pending' }),
 
-            // Rejected Vendor
-            User.countDocuments({role: 'vendor', status: 'rejected'}),
+                // Rejected Vendor
+                User.countDocuments({ role: 'vendor', status: 'rejected' }),
 
-            // Approved Vendor
-            User.countDocuments({role: 'vendor', status: 'approved'}),
+                // Approved Vendor
+                User.countDocuments({ role: 'vendor', status: 'approved' }),
 
-            // Suspended Vendor
-            User.countDocuments({role: 'vendor', status: 'suspended'}),
-        ])
-       
+                // Suspended Vendor
+                User.countDocuments({ role: 'vendor', status: 'suspended' }),
+            ])
+
         const vendorBreakdown = vendorStats[0] || {
             totalVendors: 0,
             approved: 0,
@@ -245,22 +245,22 @@ exports.getAdminStats = async(req, res) => {
 
         const stats = {
             overview: {
-               totalUser,
-               totalCustomer,
-               totalVendors: vendorBreadown.totalVendors,
+                totalUser,
+                totalCustomer,
+                totalVendors: vendorBreadown.totalVendors,
             },
-            vendors:{
-               approved: vendorBreakdown.approved || approveVendor,
-               pending: vendorBreakdown.pending || pendingVendors,
-               rejected: vendorBreakdown.rejected || rejectedVendors,
-               suspended: vendorBreakdown.suspended || suspendedVendors
+            vendors: {
+                approved: vendorBreakdown.approved || approveVendor,
+                pending: vendorBreakdown.pending || pendingVendors,
+                rejected: vendorBreakdown.rejected || rejectedVendors,
+                suspended: vendorBreakdown.suspended || suspendedVendors
             },
             newRegistrationToday: await User.countDocuments({
                 createdAt: {
                     $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
                 }
             }),
-            timestamp: new Date().toISOString()   
+            timestamp: new Date().toISOString()
         }
 
         return res.status(200).json({
@@ -269,7 +269,7 @@ exports.getAdminStats = async(req, res) => {
         })
 
     } catch (error) {
-         return res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: 'Server error'
         });
@@ -278,18 +278,18 @@ exports.getAdminStats = async(req, res) => {
 
 
 // Get all Pending Product
-exports.getPendingProduct = async(req, res) => {
+exports.getPendingProduct = async (req, res) => {
     try {
-        const products = await Product.find({status: 'pending'})
-        .populate('vendor', 'name shopName email')
-        .sort({createdAt: -1})
+        const products = await Product.find({ status: 'pending' })
+            .populate('vendor', 'name shopName email')
+            .sort({ createdAt: -1 })
 
         return res.status(200).json({
             success: true,
             count: product.length,
             products
         })
-        
+
     } catch (error) {
         return res.status(500).json({
             success: false,
@@ -301,28 +301,78 @@ exports.getPendingProduct = async(req, res) => {
 // Approve porduct
 exports.approveProduct = async (req, res) => {
     try {
-    const {id} = req.params
-    const product = await Product.findByIdAndUpdate(
-        id, 
-        {status: 'approved'},
-        {new: true}
-    ).populate('vendor', 'shopName email')
+        const { id } = req.params
+        const product = await Product.findByIdAndUpdate(
+            id,
+            { status: 'approved' },
+            { new: true }
+        ).populate('vendor', 'shopName email')
 
-    if(!product){
-        return res.status(404).json({
-            success: false,
-            message: 'Product not found'
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            })
+        }
+
+        // todo: vendor ke email pathabo je approve hoise
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product approved successfully'
         })
-    }
-
-    // todo: vendor ke email pathabo je approve hoise
-
-    return res.status(200).json({
-        success: true,
-        message: 'Product approved successfully'
-    })
 
     } catch (error) {
-        
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// 
+exports.rejectProduct = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { reason } = req.body
+
+        if (!reason) {
+            return res.status(404).json({
+                success: false,
+                message: 'Rejection reason required'
+            })
+        }
+
+        const product = await Product.findByIdAndUpdate(
+            id,
+            {
+                status: 'rejected',
+                rejectedReason: reason,
+                reviwedBy: req.user.id
+            },
+            { new: true }
+        )
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            })
+        }
+
+        // todo: vendor k email pathabe je rejected hoise
+
+        return res.status(200).json({
+            success: true,
+            message: 'Product rejected',
+            product
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
     }
 }
