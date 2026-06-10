@@ -61,11 +61,24 @@ const productSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+
     // Status
     status: {
         type: String,
         enum: ['pending', 'approved', 'rejected', 'suspended'],
         default: 'pending',
+    },
+
+    // Approved
+    approvedAt:{
+        type: Date
+    },
+    rejectedReason:{
+        type: String
+    },
+    reviwedBy:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
 
     // Additional Info

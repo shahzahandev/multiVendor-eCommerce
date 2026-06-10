@@ -1,5 +1,5 @@
 const User = require('../models/User')
-
+const Product = require('../models/product')
 
 exports.getPenddingVendors = async (req, res) => {
     try {
@@ -273,5 +273,56 @@ exports.getAdminStats = async(req, res) => {
             success: false,
             message: 'Server error'
         });
+    }
+}
+
+
+// Get all Pending Product
+exports.getPendingProduct = async(req, res) => {
+    try {
+        const products = await Product.find({status: 'pending'})
+        .populate('vendor', 'name shopName email')
+        .sort({createdAt: -1})
+
+        return res.status(200).json({
+            success: true,
+            count: product.length,
+            products
+        })
+        
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// Approve porduct
+exports.approveProduct = async (req, res) => {
+    try {
+    const {id} = req.params
+    const product = await Product.findByIdAndUpdate(
+        id, 
+        {status: 'approved'},
+        {new: true}
+    ).populate('vendor', 'shopName email')
+
+    if(!product){
+        return res.status(404).json({
+            success: false,
+            message: 'Product not found'
+        })
+    }
+
+    // todo: vendor ke email pathabo je approve hoise
+
+    return res.status(200).json({
+        success: true,
+        message: 'Product approved successfully'
+    })
+
+    } catch (error) {
+        
     }
 }
