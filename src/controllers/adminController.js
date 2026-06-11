@@ -330,7 +330,7 @@ exports.approveProduct = async (req, res) => {
     }
 }
 
-// 
+// Reject Product
 exports.rejectProduct = async (req, res) => {
     try {
         const { id } = req.params
@@ -368,6 +368,36 @@ exports.rejectProduct = async (req, res) => {
             product
         })
 
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// Get all product for admin
+exports.getAllProductsAdmin = async (req, res) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query
+        const query = status ? { status } : {}
+
+        const product = await Product.find(query)
+            .populate('vendor', 'shopName name email')
+            .sort({ createdAt: -1 })
+            .skip((page = 1) * limit)
+            .limit(Number(limit))
+
+        const total = await Product.countDocuments(query)
+
+        return res.status(200).json({
+            success: true,
+            total,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
+            product
+        })
 
     } catch (error) {
         return res.status(500).json({

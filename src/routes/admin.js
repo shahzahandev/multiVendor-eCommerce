@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { protect, restrictTo } = require('../middleware/auth');
-const { approveVendor, getPenddingVendors, getAllVendors, getApproveVendors, getRejectedVendors, rejectVendor, getAllUsers, getAdminStats } = require('../controllers/adminController');
+const { approveVendor, getPenddingVendors, getAllVendors, getApproveVendors, getRejectedVendors, rejectVendor, getAllUsers, getAdminStats, getPendingProduct, getAllProductsAdmin, approveProduct, rejectProduct } = require('../controllers/adminController');
 
 
 // All adim routes protected == only admin access
 router.use(protect, restrictTo('admin'));
+
 
 // Vendor managemnet routes
 router.get('/vendor/pending', getPenddingVendors);
@@ -19,7 +20,17 @@ router.patch('/vendor/:id/reject', rejectVendor);
 router.get('/stats', getAdminStats)
 
 
-//Basic usr management
+// Product management routes
+router.get('/product/pending', getPendingProduct)
+router.get('/product/all', getAllProductsAdmin)
+router.patch('/products/:id/approve', approveProduct)
+router.patch('/products/:id/reject', rejectProduct)
+
+
+
+//Basic user management
 router.get('/user/all', getAllUsers);
+
+
 
 module.exports = router;
