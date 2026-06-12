@@ -1,7 +1,4 @@
-const { Timestamp } = require('mongodb');
 const mongoose = require('mongoose');
-const { required } = require('zod/mini');
-const Schema = mongoose
 
 const cardItemSchema = new mongoose.Schema({
     product: {
@@ -25,7 +22,7 @@ const cardItemSchema = new mongoose.Schema({
 
 
 
-const cardSchema = new Schema({
+const cardSchema = new mongoose.Schema({
      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
