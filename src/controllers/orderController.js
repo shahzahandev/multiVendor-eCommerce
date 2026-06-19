@@ -20,7 +20,7 @@ exports.createOrder = async (req, res) => {
         const orderItems = []
         const vendor = new Map()
 
-        if(product.stock < item.quantity) {
+        if (product.stock < item.quantity) {
             return res.status(400).json({
                 success: false,
                 message: `Insuffiencient stock for ${product.item}`
@@ -113,6 +113,108 @@ exports.getOrderById = async (req, res) => {
 
         return res.status(200).json({
             success: true,
+            order
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        })
+    }
+}
+
+
+// Vendor Order Manage
+exports.getVendorOrders = async (req, res) => {
+    try {
+        const vendorId = req.user.id;
+
+        const order = await Order.find({
+            'itmes.vendor': vendorId
+        })
+            .populate('user', 'name email phone')
+            .populate('items.product', 'title images')
+            .sort({ createdAt: -1 })
+
+        const formattedOrders = order.map(order => {
+            const vendorItems = order.items.filter(item.vendor.toString() === vendorId);
+
+            const vendorTotal = vendorItems.reduce((sum, item) => {
+                return sum + (item.price * item.quantity)
+            }, 0)
+
+            return {
+                _id: order._id,
+                orderId: order.orderId,
+                customer: order.user,
+                items: vendorItems,
+                totalAmount: vendorTotal,
+                orderStatus: order.paymentStatus,
+                shippingAddress: order.shippingAddress,
+                createdAt: order.createdAt
+            }
+        })
+
+        res.status(200).json({
+            success: true,
+            count: formattedOrders.length,
+            order: formattedOrders
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        })
+    }
+}
+
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        const { orderId } = req.params
+        const { status } = req.body
+        const vendorId = req.user.id
+
+        const order = await Order.findByIdAndUpdate({ orderId })
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            })
+        }
+
+        const hasItem = order.items.some(item => item.vendor.toString() === vendorId)
+
+        if (!hasItem) {
+            return res.status(404).json({
+                success: false,
+                message: 'Not authrized for this order'
+            })
+        }
+
+
+        const vendorStatus = order.vendorStatuses.find(vs => vs.vendor.toString() === vendorId)
+
+        if (vendorStatus) {
+            vendorStatus.status = status
+        }
+
+        const allVendorStatuses = vendorStatus.map(vs => vs.status)
+
+        if (allVendorStatuses.every(s => s === 'delivered')) {
+            order.orderStatus = 'delivered'
+        } else if (allVendorStatuses.some(s => s === 'shipped')) {
+            order.orderStatus = 'shipped'
+        } else if (allVendorStatuses.some(s => s === 'processing')) {
+            order.orderStatus = 'processing'
+        }
+
+        await order.save()
+
+        return res.status(200).json({
+            success: true,
+            message: 'Order status updated successfully',
             order
         })
 

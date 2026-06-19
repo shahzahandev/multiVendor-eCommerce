@@ -1,5 +1,6 @@
 const User = require('../models/User')
 const Product = require('../models/product')
+const Order = require('../models/Order')
 
 exports.getPenddingVendors = async (req, res) => {
     try {
@@ -397,6 +398,153 @@ exports.getAllProductsAdmin = async (req, res) => {
             totalPages: Math.ceil(total / limit),
             currentPage: Number(page),
             product
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+
+
+
+// ORDER //   Get all order for admin
+exports.getAllOrderAdmin = async (req, res) => {
+    try {
+        const { status, paymentStatus, page = 1, limit = 20 } = req.query
+
+        const query = {}
+
+        if (status) query.orderStatus = status
+        if (paymentStatus) query.paymentStatus = paymentStatus
+
+        const orders = await Order.find(query)
+            .populate('user', 'name email phone')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+
+        const total = await Order.countDocuments(query)
+
+        return res.status(200).json({
+            success: true,
+            total,
+            totalPage: Math.ceil(total / limit),
+            orders
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// delete
+exports.getOrderDetailsAdmin = async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id)
+            .populate('user', 'name email phone')
+            .populate('items.product', 'title images price')
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Order deleted',
+            order
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// Update
+exports.updateOrderStatusAdmin = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { orderStatus, paymentStatus, trackingNumber, notes } = req.body
+
+        const order = await Order.findById(id)
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            })
+        }
+
+        if (orderStatus) query.orderStatus = orderStatus
+        if (paymentStatus) query.paymentStatus = paymentStatus
+        if (trackingNumber) query.trackingNumber = trackingNumber
+        if (notes) query.notes = notes
+
+        await order.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Order Updated successfully',
+            order
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        })
+    }
+}
+
+// Stats
+exports.getOrderStats = async (req, res) => {
+    try {
+        const stats = await Order.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalOrders: { $sum: 1 },
+                    totalRevenue: { $sum: '$totalAmount' },
+                    pendingOrders: {
+                        $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
+                    },
+                    processingOrders: {
+                        $sum: { $cond: [{ $eq: ['$orderStatus', 'processing'] }, 1, 0] }
+                    },
+                    shippedOrders: {
+                        $sum: { $cond: [{ $eq: ['$orderStatus', 'shipped'] }, 1, 0] }
+                    },
+                    deliveredOrders: {
+                        $sum: { $cond: [{ $eq: ['$orderStatus', 'delivered'] }, 1, 0] }
+                    },
+                }
+            }
+        ])
+
+        const result = stats[0] || {
+            totalOrders: 0,
+            totalRevenue: 0,
+            pendingOrders: 0,
+            processingOrders: 0,
+            shippedOrders: 0,
+            deliveredOrders: 0
+        }
+
+        return res.stats(200).json({
+            success: true,
+            data: result
         })
 
     } catch (error) {
