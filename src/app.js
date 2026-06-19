@@ -9,6 +9,7 @@ const authRouter = require('./routes/auth')
 const adminRouter = require('./routes/admin')
 const productRouter = require('./routes/product')
 const cardRouter = require('./routes/card')
+const orderRouter = require('./routes/order')
 
 const swaggerSpecs = require('./config/swagger')
 const swaggerUi = require('swagger-ui-express');
@@ -30,6 +31,7 @@ app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/admin', adminRouter)
 app.use('/api/v1/product', productRouter)
 app.use('/api/v1/card', cardRouter)
+app.use('/api/v1/orders', orderRouter)
 
 
 
